@@ -88,7 +88,7 @@ nano templates/index.html
     <main class="container">
         <section class="header">
             <h1>Modbus Sensor Dashboard</h1>
-            <p>Linux Edge Gateway + USB-RS485 + FastAPI</p>
+            <p>Linux Edge Gateway + RS485 + FastAPI</p>
         </section>
 
         <section class="status-card">

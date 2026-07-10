@@ -1,6 +1,6 @@
 # EP2 — Python Modbus Reader
 
-ใน EP นี้ เราจะต่อยอดจาก EP1 ที่สแกนเจออุปกรณ์ Modbus RTU แล้ว โดยนำค่าที่ได้จาก `mbpoll` มาเขียนเป็น Python Script สำหรับอ่านค่าจาก Sensor ผ่าน USB-RS485
+ใน EP นี้ เราจะต่อยอดจาก EP1 ที่สแกนเจออุปกรณ์ Modbus RTU แล้ว โดยนำค่าที่ได้จาก `mbpoll` มาเขียนเป็น Python Script สำหรับอ่านค่าจาก Sensor ผ่าน RS485 Interface
 
 ---
 
@@ -25,7 +25,7 @@
 จากการทดสอบด้วย mbpoll เราได้ค่าที่ใช้งานจริงดังนี้:
 
 ```sh
-Serial Port   : /dev/ttyUSB0
+Serial Port   : /dev/ttyUSB0 หรือ /dev/ttyS1
 Baudrate      : 9600
 Data Bits     : 8
 Parity        : None
@@ -98,13 +98,13 @@ nano src/modbus_reader.py
 ## Step 3 — กำหนดค่า Serial / Modbus
 
 ```py
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB0"  # เปลี่ยนเป็น /dev/ttyS1 ถ้าใช้ Built-in RS485
 BAUDRATE = 9600
 SLAVE_ID = 1
 START_REGISTER = 0
 REGISTER_COUNT = 3
 ```
-
+> หมายเหตุ: `SERIAL_PORT` ต้องตรงกับ device path ของเครื่องจริง ถ้าใช้ USB-RS485 มักเป็น `/dev/ttyUSB0` แต่ถ้าใช้ Built-in RS485 บน Industrial Linux Gateway อาจเป็น `/dev/ttyS0`, `/dev/ttyS1`, `/dev/ttyAMA0` หรือชื่ออื่น
 > หมายเหตุ: ใน `mbpoll` เราทดสอบด้วย `-r 1` แต่ใน `pymodbus` มักอ้าง register แบบ zero-based ดังนั้น Register 1 จึงใช้ `address=0`
 
 ---
@@ -117,7 +117,7 @@ REGISTER_COUNT = 3
 ```py
 from pymodbus.client import ModbusSerialClient
 
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB0"  # เปลี่ยนเป็น /dev/ttyS1 ถ้าใช้ Built-in RS485
 BAUDRATE = 9600
 SLAVE_ID = 1
 START_REGISTER = 0
@@ -325,7 +325,7 @@ mbpoll -m rtu -b 9600 -P none -a 1 -t 4 -r 1 -c 1 /dev/ttyUSB0
 แปลว่าเราสามารถปรับ `modbus_reader.py` ได้ประมาณนี้:
 
 ```py
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB0"  # เปลี่ยนเป็น /dev/ttyS1 ถ้าใช้ Built-in RS485
 BAUDRATE = 9600
 SLAVE_ID = 1
 START_REGISTER = 0
@@ -415,7 +415,7 @@ data = {
 import time
 from pymodbus.client import ModbusSerialClient
 
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB0"  # เปลี่ยนเป็น /dev/ttyS1 ถ้าใช้ Built-in RS485
 BAUDRATE = 9600
 SLAVE_ID = 1
 START_REGISTER = 0
@@ -530,10 +530,10 @@ sudo usermod -aG dialout $USER
 
 2. Cannot connect to serial port
 
-ตรวจสอบว่าเจอ USB-RS485 หรือไม่:
+ตรวจสอบว่าเจอ RS485 Interface หรือไม่:
 
 ```bash
-ls -l /dev/ttyUSB*
+ls -l /dev/ttyUSB* /dev/ttyS* /dev/ttyAMA* /dev/ttyO* 2>/dev/null
 ```
 
 <br>
