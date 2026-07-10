@@ -65,13 +65,13 @@ src/
 
 ---
 
-## Step 1 — ติดตั้ง Python Library
+## Step 1 — ติดตั้ง Python Library ใน Virtual Environment
 
-ติดตั้ง `python3-pymodbus`
+เปิดใช้งาน `.venv` ที่สร้างไว้จาก EP1 แล้วติดตั้ง `pymodbus` ด้วย `pip`
 
 ```sh
-sudo apt update
-sudo apt install python3-pymodbus -y
+source .venv/bin/activate
+pip install pymodbus
 ```
 
 <br>
@@ -79,12 +79,12 @@ sudo apt install python3-pymodbus -y
 ทดสอบว่า import ได้:
 
 ```sh
-python3 -c "import pymodbus; print('pymodbus OK')"
+python -c "import pymodbus; print('pymodbus OK')"
 ```
 
 ---
 
-Step 2 — สร้างไฟล์ modbus_reader.py
+## Step 2 — สร้างไฟล์ modbus_reader.py
 
 สร้างโฟลเดอร์และไฟล์:
 
@@ -104,6 +104,8 @@ SLAVE_ID = 1
 START_REGISTER = 0
 REGISTER_COUNT = 3
 ```
+
+> หมายเหตุ: ใน `mbpoll` เราทดสอบด้วย `-r 1` แต่ใน `pymodbus` มักอ้าง register แบบ zero-based ดังนั้น Register 1 จึงใช้ `address=0`
 
 ---
 
@@ -139,12 +141,18 @@ def read_sensor():
         }
 
     try:
-        result = client.read_holding_registers(
-            address=START_REGISTER,
-            count=REGISTER_COUNT,
-            slave=SLAVE_ID
-        )
-
+        try:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                device_id=SLAVE_ID
+            )
+        except TypeError:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                slave=SLAVE_ID
+            )
         if result.isError():
             return {
                 "status": "error",
@@ -176,14 +184,14 @@ if __name__ == "__main__":
 ## Step 5 — รันโปรแกรม
 
 ```sh
-python3 src/modbus_reader.py
+python src/modbus_reader.py
 ```
 
 <br>
 
 ตัวอย่างผลลัพธ์:
 
-```json
+```python
 {'status': 'ok', 'pm1_0': 8, 'pm2_5': 14, 'pm10': 18}
 ```
 
@@ -205,9 +213,9 @@ python3 src/modbus_reader.py
 
 | Register | Field | Unit  |
 | -------: | ----- | ----- |
-|        1 | pm1_0 | µg/m³ |
-|        2 | pm2_5 | µg/m³ |
-|        3 | pm10  | µg/m³ |
+|        1 | pm1_0 | ug/m3 |
+|        2 | pm2_5 | ug/m3 |
+|        3 | pm10  | ug/m3 |
 
 <br>
 
@@ -286,12 +294,18 @@ def read_sensor():
         }
 
     try:
-        result = client.read_holding_registers(
-            address=START_REGISTER,
-            count=REGISTER_COUNT,
-            slave=SLAVE_ID
-        )
-
+        try:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                device_id=SLAVE_ID
+            )
+        except TypeError:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                slave=SLAVE_ID
+            )
         if result.isError():
             return {
                 "status": "error",
@@ -329,10 +343,10 @@ if __name__ == "__main__":
 
 ## Step 9 — ทดสอบอ่านค่าหลายครั้ง
 
-รันแบบวนทุก 2 วินาที:
+รันแบบวนทุก 1 วินาที:
 
 ```bash
-watch -n 2 python3 src/modbus_reader.py
+watch -n 1 python src/modbus_reader.py
 ```
 
 <br>
@@ -340,7 +354,7 @@ watch -n 2 python3 src/modbus_reader.py
 ตัวอย่าง:
 
 ```bash
-Every 2.0s: python3 src/modbus_reader.py
+Every 1.0s: python src/modbus_reader.py
 
 {'status': 'ok', 'pm1_0': 8, 'pm2_5': 14, 'pm10': 18, 'timestamp': 1783650000}
 ```
@@ -392,10 +406,11 @@ ls -l /dev/ttyUSB*
 
 4. pymodbus import ไม่ได้
 
-ติดตั้งใหม่:
+เปิดใช้งาน `.venv` แล้วติดตั้งใหม่:
 
 ```bash
-sudo apt install python3-pymodbus -y
+source .venv/bin/activate
+pip install pymodbus
 ```
 
 ---

@@ -1,0 +1,17 @@
+[Unit]
+Description=Modbus FastAPI Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Change User and paths to match your Linux username and project directory.
+User=pi0001
+Group=dialout
+WorkingDirectory=/home/pi0001/industrial-linux-modbus-fastapi-dashboard/src
+Environment="PATH=/home/pi0001/industrial-linux-modbus-fastapi-dashboard/.venv/bin"
+ExecStart=/home/pi0001/industrial-linux-modbus-fastapi-dashboard/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

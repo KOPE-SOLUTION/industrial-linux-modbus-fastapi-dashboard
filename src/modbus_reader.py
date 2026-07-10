@@ -26,12 +26,18 @@ def read_sensor():
         }
 
     try:
-        result = client.read_holding_registers(
-            address=START_REGISTER,
-            count=REGISTER_COUNT,
-            slave=SLAVE_ID
-        )
-
+        try:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                device_id=SLAVE_ID
+            )
+        except TypeError:
+            result = client.read_input_registers(
+                address=START_REGISTER,
+                count=REGISTER_COUNT,
+                slave=SLAVE_ID
+            )
         if result.isError():
             return {
                 "status": "error",

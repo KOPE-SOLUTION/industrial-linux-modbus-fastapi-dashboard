@@ -1,6 +1,6 @@
 # Scripts
 
-โฟลเดอร์นี้เก็บ Utility Script สำหรับใช้งานกับ Raspberry Pi และ Modbus RTU
+โฟลเดอร์นี้เก็บ Utility Script สำหรับใช้งานกับ Linux gateway และ Modbus RTU
 
 ## Requirements
 
@@ -8,10 +8,13 @@
 
 ```bash
 sudo apt update
-sudo apt install python3-pip python3-serial mbpoll -y
+sudo apt install python3-venv mbpoll -y
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pyserial
 ```
 
-ตรวจสอบว่า Raspberry Pi พบ USB-RS485
+ตรวจสอบว่า Linux gateway พบ USB-RS485
 
 ```bash
 ls -l /dev/ttyUSB*

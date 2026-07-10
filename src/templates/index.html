@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Modbus Sensor Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="container">
+        <section class="header">
+            <h1>Modbus Sensor Dashboard</h1>
+            <p>Linux Edge Gateway + USB-RS485 + FastAPI</p>
+        </section>
+
+        <section class="status-card">
+            <span id="status-dot" class="dot"></span>
+            <span id="status-text">Connecting...</span>
+        </section>
+
+        <section class="grid">
+            <div class="card">
+                <h2>PM1.0</h2>
+                <div class="value">
+                    <span id="pm1_0">--</span>
+                    <small>ug/m3</small>
+                </div>
+            </div>
+
+            <div class="card highlight">
+                <h2>PM2.5</h2>
+                <div class="value">
+                    <span id="pm2_5">--</span>
+                    <small>ug/m3</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>PM10</h2>
+                <div class="value">
+                    <span id="pm10">--</span>
+                    <small>ug/m3</small>
+                </div>
+            </div>
+        </section>
+
+        <section class="footer">
+            <p>Last Update: <span id="updated">--</span></p>
+        </section>
+    </main>
+
+    <script>
+        async function loadSensorData() {
+            try {
+                const response = await fetch("/api/sensor");
+                const data = await response.json();
+
+                if (data.status === "ok") {
+                    document.getElementById("pm1_0").textContent = data.pm1_0;
+                    document.getElementById("pm2_5").textContent = data.pm2_5;
+                    document.getElementById("pm10").textContent = data.pm10;
+
+                    const date = new Date(data.timestamp * 1000);
+                    document.getElementById("updated").textContent =
+                        date.toLocaleString("th-TH");
+
+                    document.getElementById("status-text").textContent = "Online";
+                    document.getElementById("status-dot").className = "dot online";
+                } else {
+                    document.getElementById("status-text").textContent = "Sensor Error";
+                    document.getElementById("status-dot").className = "dot error";
+                }
+            } catch (error) {
+                document.getElementById("status-text").textContent = "Connection Error";
+                document.getElementById("status-dot").className = "dot error";
+            }
+        }
+
+        loadSensorData();
+        setInterval(loadSensorData, 1000);
+    </script>
+</body>
+</html>

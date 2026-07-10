@@ -1,11 +1,12 @@
-# คู่มือการสแกน Modbus RTU ด้วย Raspberry Pi และ USB-RS485
+# คู่มือการสแกน Modbus RTU ด้วย Linux Edge Gateway และ USB-RS485
 
 ## วัตถุประสงค์
 
-คู่มือนี้อธิบายการเตรียม Raspberry Pi เพื่อค้นหา (Scan) Modbus Address ของอุปกรณ์ RS485 ผ่าน USB-RS485 Adapter
+คู่มือนี้อธิบายการเตรียม Linux gateway เพื่อค้นหา (Scan) Modbus Address ของอุปกรณ์ RS485 ผ่าน USB-RS485 Adapter
+
+> Note: ซีรีส์นี้เน้นทำระบบจริงให้ทำงานได้ก่อน บางช่วงจะใช้วิธีคัดลอกคำสั่งหรือโค้ดตัวอย่างไปวาง แล้วอธิบายภาพรวมของ workflow เป็นหลัก รายละเอียดเชิงลึกของ HTML, CSS, JavaScript, Python, FastAPI, systemd และ Podman สามารถแยกศึกษาเป็นซีรีส์พื้นฐานเพิ่มเติมภายหลังได้
 
 ---
-
 # 1. อัปเดตระบบ
 
 ```bash
@@ -16,15 +17,18 @@ sudo apt update
 
 # 2. ติดตั้งโปรแกรมที่จำเป็น
 
-ติดตั้ง Python, PySerial และโปรแกรม `mbpoll`
+ติดตั้งโปรแกรมระบบที่จำเป็น แล้วสร้าง Python virtual environment สำหรับติดตั้ง Library ด้วย `pip`
 
 ```bash
-sudo apt install python3-pip python3-serial mbpoll -y
+sudo apt install python3-venv mbpoll -y
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pyserial
 ```
 
 ---
 
-# 3. ตรวจสอบว่า Raspberry Pi พบ USB-RS485 แล้ว
+# 3. ตรวจสอบว่า Linux gateway พบ USB-RS485 แล้ว
 
 ```bash
 ls -l /dev/ttyUSB*
@@ -36,7 +40,7 @@ ls -l /dev/ttyUSB*
 crw-rw---- 1 root dialout 188, 0 Jun 30 12:53 /dev/ttyUSB0
 ```
 
-หากพบ `/dev/ttyUSB0` แสดงว่า Raspberry Pi มองเห็น USB-RS485 แล้ว
+หากพบ `/dev/ttyUSB0` แสดงว่า Linux gateway มองเห็น USB-RS485 แล้ว
 
 ---
 
@@ -71,7 +75,7 @@ sudo usermod -aG dialout $USER
 # 5. ทดสอบเปิด Serial Port
 
 ```bash
-python3 -c "import serial; s=serial.Serial('/dev/ttyUSB0',9600,timeout=1); print('OK'); s.close()"
+python -c "import serial; s=serial.Serial('/dev/ttyUSB0',9600,timeout=1); print('OK'); s.close()"
 ```
 
 ผลลัพธ์ที่ถูกต้อง
@@ -90,14 +94,14 @@ OK
 * Data Bits : 8
 * Parity : None
 * Stop Bits : 1
-* Function Code : 03 (Read Holding Registers)
+* Function Code : 04 (Read Input Registers)
 
 สแกน Address 1–20
 
 ```bash
 for id in $(seq 1 20); do
     echo "Scan ID $id"
-    mbpoll -m rtu -b 9600 -P none -a $id -t 3 -r 1 -c 1 /dev/ttyUSB0 -1 -q && echo "FOUND $id"
+    mbpoll -m rtu -b 9600 -P none -a $id -t 4 -r 1 -c 1 /dev/ttyUSB0 -1 -q && echo "FOUND $id"
 done
 ```
 
@@ -109,7 +113,7 @@ done
 
 ```text
 Scan ID 5
-Read holding register failed: Connection timed out
+Read input register failed: Connection timed out
 ```
 
 หมายความว่า
@@ -145,25 +149,25 @@ FOUND 1
 * ตรวจสอบสาย RS485 A/B ไม่สลับ
 * ตรวจสอบ Baud Rate
 * ตรวจสอบ Modbus Address
-* ทดลอง Function Code 04
+* ทดลอง Function Code 03 หากอุปกรณ์รุ่นนั้นเก็บค่าไว้ใน Holding Register
 * ทดลอง Register Address อื่น
 
 ---
 
-# 9. ทดลอง Function Code 04
+# 9. ทดลอง Function Code 03
 
-อุปกรณ์บางรุ่นเก็บค่าที่วัดได้ไว้ใน Input Register
+อุปกรณ์บางรุ่นเก็บค่าที่ต้องอ่านไว้ใน Holding Register แทน Input Register
 
 ตัวอย่าง
 
 ```bash
 for id in $(seq 1 20); do
     echo "Scan ID $id"
-    mbpoll -m rtu -b 9600 -P none -a $id -t 4 -r 1 -c 1 /dev/ttyUSB0 -1 -q && echo "FOUND $id"
+    mbpoll -m rtu -b 9600 -P none -a $id -t 3 -r 1 -c 1 /dev/ttyUSB0 -1 -q && echo "FOUND $id"
 done
 ```
 
-หาก FC03 ไม่พบ แต่ FC04 พบ แสดงว่าอุปกรณ์ใช้ **Input Register**
+หาก FC04 ไม่พบ แต่ FC03 พบ แสดงว่าอุปกรณ์ใช้ **Holding Register**
 
 ---
 
